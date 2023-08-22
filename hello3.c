@@ -39,12 +39,12 @@ void FlowChart()
         if((a / b) > 20)
         {
             a /= 2;
-        } else if((a / b) < 20)
+        } else
         {
             if((b < (a / 2)))
             {
                 b += 2;
-            } else if((b > (a / 2)))
+            } else
             {
                 b += 1;
             }
