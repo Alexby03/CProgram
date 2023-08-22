@@ -16,7 +16,7 @@ void Rectangle()
     {
         for (j = 0; j < b; j++)
         {
-            if (j > 0 && j < (h - 1) && i > 0 && i < (b - 1))
+            if ((j > 0) && (j < (b - 1)) && ((i != 0) && i != (h - 1)))
             {
                 printf(" ");
             } else 
