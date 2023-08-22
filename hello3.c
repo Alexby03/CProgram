@@ -16,7 +16,7 @@ void Rectangle()
     {
         for (j = 0; j < b; j++)
         {
-            if ((j > 0 && j < (h - 1)) && (i > 0 && i < (b - 1)))
+            if (j > 0 && j < (h - 1) && i > 0 && i < (b - 1))
             {
                 printf(" ");
             } else 
@@ -56,8 +56,8 @@ void FlowChart()
 
 int main()
 {
-    /*Rectangle();*/
-    FlowChart();
+    Rectangle();
+    /*FlowChart();*/
     printf("Avslutar");
 
     return 0;
