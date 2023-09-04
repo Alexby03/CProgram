@@ -2,9 +2,9 @@
 
 float height = 250.0f;
 float velocity = -25.0f;
-int throttle = 0.0f;
+int throttle = 0;
 
-float Velocity(float velocity)
+float Velocity()
     {
         
         float newVelocity;
@@ -15,7 +15,7 @@ float Velocity(float velocity)
 
     }
     
-    float Height(float height, float velocity)
+    float Height()
     {
 
         float newHeight;
@@ -39,16 +39,25 @@ int main()
 
     while (height > 0)
     {
-        printf(" %d   %.1f   %.1f   ", time, height, velocity);
+        printf("%2d %7.1f %7.1f   ", time, height, velocity);
         scanf("%d", &throttle);
 
-        height = Height(height, velocity);
-        velocity = Velocity(velocity);
+        if (throttle < 0 || throttle > 100)
+        {
+
+            printf("Throttle must be between 0 and 100.\n");
+
+            continue;
+
+        }
+
+        height = Height();
+        velocity = Velocity();
         
         time++;
 
     }
-    
+
     if (velocity < -2.0f)
     {
 
