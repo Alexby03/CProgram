@@ -5,7 +5,6 @@ int main()
 
     int day;
     int dayCount;
-    int quotient;
     int dayTotal;
 
     printf("Vilken dag ar det idag (1-man, 2-tis, ..., 7-son): ");
@@ -14,9 +13,7 @@ int main()
     scanf("%d", &dayCount);
     printf("Om %d dagar ar det ", dayCount);
 
-    dayTotal = day + dayCount;
-    quotient = (dayTotal) / 7;
-    dayTotal -= quotient * 7;
+    dayTotal = (day + dayCount) % 7;
 
     switch(dayTotal)
     {
