@@ -39,7 +39,7 @@ int main()
 
     while (height > 0)
     {
-        printf("%2d %7.1f %7.1f   ", time, height, velocity);
+        printf("%2d   %5.1f  %5.1f    ", time, height, velocity);
         scanf("%d", &throttle);
 
         if (throttle < 0 || throttle > 100)
