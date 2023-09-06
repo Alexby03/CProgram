@@ -3,13 +3,9 @@
 int main()
 {
 
-    int i=0;
-    if(i++)
-    {
-        i++;
-        printf("%d",i); //vad skrivs ut?
-    }
-
+    int n;
+    scanf("%d", &n);
+    printf("%d", n);
+    
     return 0;
-
 }

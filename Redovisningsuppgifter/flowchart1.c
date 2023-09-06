@@ -15,10 +15,10 @@ int main()
         {
             while (b < (a / 2))
             {
-                b += 1;
+                b++;
                 printf("%d\n", b);
             }
-            b += 1;
+            b++;
         }
     }
 

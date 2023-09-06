@@ -18,25 +18,25 @@ int main()
     switch(dayTotal)
     {
         case 0:
-        printf("sondag");
+            printf("sondag");
         break;
         case 1:
-        printf("mandag");
+            printf("mandag");
         break;
         case 2:
-        printf("tisdag");
+            printf("tisdag");
         break;
         case 3:
-        printf("onsdag");
+            printf("onsdag");
         break;
         case 4:
-        printf("torsdag");
+            printf("torsdag");
         break;
         case 5:
-        printf("fredag");
+            printf("fredag");
         break;
         case 6:
-        printf("lordag");
+            printf("lordag");
         break;
     }
 
