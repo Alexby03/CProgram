@@ -1,17 +1,13 @@
 #include <stdio.h>
 
-float height = 250.0f;
-float velocity = -25.0f;
-int throttle = 0;
-
-float Velocity()
+float Velocity(float velocity, int throttle)
 {
     float newVelocity;
     newVelocity = velocity + (0.1 * throttle - 1.5);
     return newVelocity;
 }
 
-float Height()
+float Height(float velocity, float height, int throttle)
 {
     float newHeight;
     newHeight = height + velocity + ((0.1 * throttle - 1.5) / 2);
@@ -20,7 +16,11 @@ float Height()
 
 int main()
 {
+    float height = 250.0f;
+    float velocity = -25.0f;
+    int throttle = 0;
     int time = 0;
+
     printf("Lunar decent challenge!\n");
     printf("You will pilot a lunar decent the last 250m.\n");
     printf("Each turn represent 1-second decent time.\n");
@@ -38,8 +38,8 @@ int main()
             continue;
         }
 
-        height = Height();
-        velocity = Velocity();
+        height = Height(velocity, height, throttle);
+        velocity = Velocity(velocity, throttle);
         time++;
     }
 
