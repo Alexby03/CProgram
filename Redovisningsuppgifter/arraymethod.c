@@ -78,7 +78,7 @@ int main()
     //int ex_array[LENGTH] = {0, 1, 2, 3, 4};
     //InputArrayDeterm(ex_array, LENGTH);
 
-    int ex_array[LENGTH];
+    int ex_array[];
     
     //InputArrayRand(ex_array, LENGTH);
 
