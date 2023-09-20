@@ -99,7 +99,7 @@ void normalizedValue(int measurements[], int normalizedArray[], int nrOfMeasurem
 
 }
 
-void compute(int measurements[], int normalizedArray[], int nrOfMeasurements)
+void compute(int measurements[], int nrOfMeasurements)
 {
     if(nrOfMeasurements == 0)
     {
@@ -111,6 +111,7 @@ void compute(int measurements[], int normalizedArray[], int nrOfMeasurements)
         printf("Min value: %d\n", determineMin(measurements, nrOfMeasurements));
         printf("Average value: %.2f\n", giveAverage(measurements, nrOfMeasurements));
 
+        int normalizedArray[SIZE] = {0};
         normalizedValue(measurements, normalizedArray, nrOfMeasurements);
 
         printf("Normalized value: [ ");
@@ -129,7 +130,6 @@ int main()
     printf("Measurement tool 2.0\n");
 
     int measurements[SIZE] = {0};
-    int normalizedArray[SIZE] = {0};
     int nrOfMeasurements = 0;
     char optionchoice;
     
@@ -151,7 +151,7 @@ int main()
         }
         else if(optionchoice == 'c')
         {  
-            compute(measurements, normalizedArray, nrOfMeasurements);
+            compute(measurements, nrOfMeasurements);
         }
         else if(optionchoice == 'r')
         {  
