@@ -114,13 +114,8 @@ void compute(int measurements[], int nrOfMeasurements)
         int normalizedArray[SIZE] = {0};
         normalizedValue(measurements, normalizedArray, nrOfMeasurements);
 
-        printf("Normalized value: [ ");
-
-        for(int i = 0; i < nrOfMeasurements; i++)
-        {
-            printf("%d ", normalizedArray[i]);
-        }
-        printf("]\n");
+        printf("Normalized value: ");
+        view(normalizedArray, nrOfMeasurements);
     }
 }
 
