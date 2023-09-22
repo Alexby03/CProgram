@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <limits.h>
 
 void generateArray(int arrPeople[], int nrOfPeople)
 {
@@ -11,11 +10,15 @@ void generateArray(int arrPeople[], int nrOfPeople)
     }
 }
 
-void printArray(int arrPeople[], int nrOfPeople)
+void printArray(int arr[], int n)
 {
-    for(int i = 0; i < nrOfPeople; i++)
+    for(int i = 0; i < n; i++)
     {
-        printf("%d, ", arrPeople[i]);
+        if(i >= 30)
+        {
+            break;
+        }
+        printf("%d, ", arr[i]);
     }
 }
 
@@ -30,8 +33,19 @@ float calculateAverage(int arrPeople[], int nrOfPeople)
     return averageValue;
 }
 
+void cloneArray(int inputArray[], int outputArray[], int index)
+{
+    
+    for(int i = 0; i < index; i++)
+    {
+        outputArray[i] = inputArray[i];
+    }
+
+}
+
 float calculateMedian(int arrPeople[], int nrOfPeople)
 {
+
     for(int j = 0; j < nrOfPeople; j++)
     {
         for(int i = 0; i < (nrOfPeople - 1); i++)
@@ -57,66 +71,52 @@ float calculateMedian(int arrPeople[], int nrOfPeople)
 }
 
 void calculateMode(int arrPeople[], int nrOfPeople)
-{
-    int maxFrequency = 0;
-    int frequencies[nrOfPeople];
-    int nrOfModes = 0;
-    int modes[nrOfPeople];
-    int modesSeen[nrOfPeople];
+{ 
+    int occurances[nrOfPeople];
     
+    printf("\n");
+
     for (int i = 0; i < nrOfPeople; i++)
     {
-        modes[i] = 0;
-        modesSeen[i] = 0;
-        frequencies[i] = 0;
-    }
-
-    for (int i = 0; i < nrOfPeople; i++) 
-    {
-        if (modesSeen[i] == 1) 
+        occurances[i] = 0;
+        
+        for (int j = i + 1; j < nrOfPeople; j++)
         {
-            continue;
-        }
-        int count = 1;
-
-        for (int j = i + 1; j < nrOfPeople; j++) 
-        {
-            if (arrPeople[i] == arrPeople[j])
-            {
-                count++;
-                modesSeen[j] = 1;
-            }
-            frequencies[i] = count;
-        }
-
-        if (count > 1) 
-        {
-            modes[nrOfModes] = arrPeople[i];
-            nrOfModes++;
-            if(count > maxFrequency)
-            {
-                maxFrequency = count;
+            if(arrPeople[i] == arrPeople[j]){
+                occurances[i]++;
             }
         }
     }
 
-    printf("\nTypvardet: ");
-    for(int i = 0; i < nrOfPeople; i++)
+    printf("Typvardet: ");
+
+    int currentLargest = 0;
+
+    for (int i = 0; i < nrOfPeople - 1; i++)
     {
-        if(frequencies[i] == maxFrequency)
+        if(occurances[i] > currentLargest)
         {
-            printf("%d, ", modes[i]);
+            currentLargest = occurances[i];
         }
     }
 
-    printf("\n");
-    for(int i = 0; i < nrOfModes; i++)
+    for (int i = 0; i < nrOfPeople; i++)
+    {  
+        if(occurances[i] < currentLargest)
+        {
+            occurances[i] = 0;
+        }
+    }
+
+    for (int i = 0; i < nrOfPeople; i++)
     {
-        printf("%d, ", frequencies[i]);
+        if(occurances[i] != 0){
+            printf("%d, ", arrPeople[i]);
+        }
     }
 }
 
-void createArray(int arrPeople[], int nrOfPeople)
+void createArray(int arrPeople[], int arrMedianDisplay[], int nrOfPeople)
 {
     generateArray(arrPeople, nrOfPeople);
     printArray(arrPeople, nrOfPeople);
@@ -132,16 +132,17 @@ int main()
 
     int nrOfPeople;
    
-
     printf("Hur manga personer vill du gora statistik pa? ");
     scanf("%d", &nrOfPeople);
     int arrPeople[nrOfPeople];
+    int arrMedianDisplay[nrOfPeople];
     for (int i = 0; i < nrOfPeople; i++)
     {
         arrPeople[i] = 0;
+        arrMedianDisplay[i] = 0;
     }
-
-    createArray(arrPeople, nrOfPeople);
+    cloneArray(arrPeople, arrMedianDisplay, nrOfPeople);
+    createArray(arrPeople, arrMedianDisplay, nrOfPeople);
 
     return 0;
 }
