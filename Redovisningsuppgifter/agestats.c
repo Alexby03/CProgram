@@ -58,6 +58,7 @@ float calculateMedian(int arrPeople[], int nrOfPeople)
             }
         }
     }
+
     float median;
     if(nrOfPeople % 2 == 0) //Median (M) = (Value at position n / 2 + Value at position (n / 2 + 1)) / 2
     {
