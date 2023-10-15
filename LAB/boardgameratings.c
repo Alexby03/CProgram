@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 //alla namn på spelare och spel ska va ett enda ord
 
@@ -21,6 +22,13 @@ struct user
     Game gamesList[MAXUSERGAMES];
 };
 typedef struct user User;
+
+struct searchGameIndex
+{
+    int nrOfMatches;
+    int originalIndex;
+};
+typedef struct searchGameIndex SearchGameIndex;
 
 /*    ---    funktioner   ---   */
 
@@ -76,6 +84,7 @@ void registerUser(User listOfUsers[], int *pNrOfUsers) //checks whether user can
     while(1)
     {
         char registerName[NAMELENGTH];
+        int userNameExists;
         printf("Register new user (q to quit): ");
         fgets(registerName, sizeof(registerName), stdin);
         registerName[strlen(registerName) - 1] = '\0';
@@ -83,12 +92,13 @@ void registerUser(User listOfUsers[], int *pNrOfUsers) //checks whether user can
         {
             break;
         }
-        else if(findUser(listOfUsers, pNrOfUsers, registerName) == 1) // user name already exists, try another one!
+        userNameExists = findUser(listOfUsers, pNrOfUsers, registerName);
+        if(userNameExists == 1) // user name already exists, try another one!
         {
             printf("User name exists! Please choose another.\n");
             continue;
         }
-        else if(findUser(listOfUsers, pNrOfUsers, registerName) == 0) // did not find user, lets create one!
+        else if(userNameExists == 0) // did not find user, lets create one!
         {
             if((*pNrOfUsers >= MAXUSERS))
             {
@@ -97,12 +107,27 @@ void registerUser(User listOfUsers[], int *pNrOfUsers) //checks whether user can
             }
             listOfUsers[(*pNrOfUsers)] = createUser(registerName);
             (*pNrOfUsers)++;
+            for(int j = 0; j < (*pNrOfUsers); j++)
+            {
+                for(int i = 0; i < (*pNrOfUsers) - 1; i++)
+                {
+                if(strcmp(listOfUsers[i].userName, listOfUsers[i + 1].userName) > 0) //checks if the element before the other has a name that is lexicographically larger, and then moves it down the list.
+                {
+                    User temp = listOfUsers[i];
+                    listOfUsers[i] = listOfUsers[i + 1];
+                    listOfUsers[i + 1] = temp;
+                }
+                }
+            }
         }
     }
 }
 
 void removeUser(User listOfUsers[], int *pNrOfUsers) // removes one user from the list
 {
+    int userIndex;
+    char choice;
+    int continueLoop = 0;
     while(1)
     {
         char registerName[NAMELENGTH];
@@ -113,23 +138,88 @@ void removeUser(User listOfUsers[], int *pNrOfUsers) // removes one user from th
         {
             break;
         }
-        else if(returnUserIndex(listOfUsers, pNrOfUsers, registerName) == (-1)) // user name does not exist, try another one!
+        userIndex = returnUserIndex(listOfUsers, pNrOfUsers, registerName);
+        if(userIndex == (-1)) // user name does not exist, try another one!
         {
             printf("User do not exist! Please choose another.\n");
             continue;
         }
-        else if(returnUserIndex(listOfUsers, pNrOfUsers, registerName) != (-1)) // found user, lets delete them!
+        else if(userIndex != (-1)) // found user, lets delete them!
         {
-            int j = returnUserIndex(listOfUsers, pNrOfUsers, registerName); //TODO: Add confirmation option when user has registered games and scores!!!
-            for(j; j < MAXUSERS; j++)
+            if(listOfUsers[userIndex].nrOfGames > 0)
             {
-                User temp;
-                temp = listOfUsers[j];
-                listOfUsers[j] = listOfUsers[j + 1];
-                listOfUsers[j + 1] = temp;
+                printf("Warning: User has rated games.\n");
+                while(1)
+                {
+                    printf("Do you still want to remove %s (y/n)? ", listOfUsers[userIndex].userName);
+                    scanf("%c%*c", &choice);
+                    if(choice == 'n')
+                    {
+                        continueLoop = 1;
+                        break;
+                    }
+                    else if(choice == 'y')
+                    {
+                        break;
+                    }
+                }
+
             }
-            (*pNrOfUsers)--;
+            if(continueLoop == 0)
+            {
+                int j = userIndex; //TODO: Add confirmation option when user has registered games and scores!!!
+                for(j; j < MAXUSERS; j++)
+                {
+                    User temp;
+                    temp = listOfUsers[j];
+                    listOfUsers[j] = listOfUsers[j + 1];
+                    listOfUsers[j + 1] = temp;
+                }
+                (*pNrOfUsers)--;
+            }
         }
+    }
+}
+
+void printUserRatings(User listOfUsers[], int *pNrOfUsers)
+{
+    if((*pNrOfUsers) == 0)
+    {
+        printf("No users registrered\n");
+    }
+    else
+    {
+        printf("Users and boardgames:\n_____________________________________\n");
+        for(int i = 0; i < (*pNrOfUsers); i++) //here we just print out the ratings and game names, and nothing if the user has nothing registered
+        {
+            printf("%s\n", listOfUsers[i].userName);
+            if(listOfUsers[i].nrOfGames == 0)
+            {
+                printf("        No games registrered\n");
+                continue;
+            }
+            for(int j = 0; j < listOfUsers[i].nrOfGames; j++)
+            {
+                printf("        %-20s%d\n", listOfUsers[i].gamesList[j].gameName, listOfUsers[i].gamesList[j].grade);
+            }
+        }
+    }
+}
+
+void printUsers(User listOfUsers[], int *pNrOfUsers)
+{
+    if((*pNrOfUsers) == 0)
+    {
+        printf("No users registrered\n");
+    }
+    else
+    {
+        printf("Users:\n_____________________________________\n");
+        for (int i = 0; i < (*pNrOfUsers); i++)
+        {
+            printf("%s\n", listOfUsers[i].userName);
+        }
+        printf("\n");
     }
 }
 
@@ -156,21 +246,10 @@ void adminMenu(User listOfUsers[], int *pNrOfUsers) //administrative menu
                 removeUser(listOfUsers, pNrOfUsers);
                 break;
             case 3: //print all users
-                if((*pNrOfUsers) == 0)
-                {
-                    printf("No users registrered\n");
-                }
-                else
-                {
-                    printf("Users:\n_____________________________________\n");
-                    for (int i = 0; i < (*pNrOfUsers); i++)
-                    {
-                        printf("%s\n", listOfUsers[i].userName);
-                    }
-                    printf("\n");
-                }
+                printUsers(listOfUsers, pNrOfUsers);
                 break;
             case 4: //print all users and ratings
+                printUserRatings(listOfUsers, pNrOfUsers);
                 break;
             case 5: //exit
                 exit = 1;
@@ -256,16 +335,52 @@ void printGames(User listOfUsers[], int userIndex)
         }
         for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++)
         {
-            printf("%-*s %d\n", dynamicLength, listOfUsers[userIndex].gamesList[i].gameName, listOfUsers[userIndex].gamesList[i].grade);
+            printf("        %-*s %d\n", dynamicLength, listOfUsers[userIndex].gamesList[i].gameName, listOfUsers[userIndex].gamesList[i].grade);
         }
     }
+}
+
+SearchGameIndex searchDisplayGames(User listOfUsers[], char searchWord[], int userIndex)
+{
+    Game searchArray[MAXUSERGAMES];
+    SearchGameIndex searchGameInfo;
+    int newArrayIndex = 0;
+    int originalIndex;
+    for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++) // we start searching for matching strings
+    {
+        if(strstr(listOfUsers[userIndex].gamesList[i].gameName, searchWord) != NULL)
+        {
+            strcpy(searchArray[newArrayIndex].gameName, listOfUsers[userIndex].gamesList[i].gameName);
+            searchArray[newArrayIndex].grade = listOfUsers[userIndex].gamesList[i].grade;
+            originalIndex = i;
+            newArrayIndex++;
+        }
+    }
+    int dynamicLength = 0;
+    for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++) //decides the assigned length for the string so we can format the print properly
+    {
+        if(strlen(searchArray[i].gameName) > dynamicLength)
+        {
+            dynamicLength = strlen(searchArray[i].gameName);
+        }
+    }
+    for(int i = 0; i < newArrayIndex; i++) //we print out the scores accordingly with proper formattings
+    {
+        printf("%-*s %d\n", dynamicLength, searchArray[i].gameName, searchArray[i].grade);
+    }
+    searchGameInfo.nrOfMatches = newArrayIndex;
+    searchGameInfo.originalIndex = originalIndex;
+    return searchGameInfo; //we return HOW many games we found with your searchword
 }
 
 void searchGame(User listOfUsers[], int userIndex)
 {
     char searchWord[NAMELENGTH];
-    Game searchArray[MAXUSERGAMES];
-    int newArrayIndex = 0;
+    if(listOfUsers[userIndex].nrOfGames == 0)
+    {
+        printf("No games registrered\n");
+        return;
+    }
     while(1)
     {
         printf("Search (q to quit): ");
@@ -275,32 +390,14 @@ void searchGame(User listOfUsers[], int userIndex)
         {
             break; //we quit on q
         }
-        for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++) // we start searching for matching strings
+        else
         {
-            if(strstr(listOfUsers[userIndex].gamesList[i].gameName, searchWord) != NULL)
-            {
-                strcpy(searchArray[newArrayIndex].gameName, listOfUsers[userIndex].gamesList[i].gameName);
-                searchArray[newArrayIndex].grade = listOfUsers[userIndex].gamesList[i].grade;
-                newArrayIndex++;
-            }
+            searchDisplayGames(listOfUsers, searchWord, userIndex);
         }
-        int dynamicLength = 0;
-        for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++)
-        {
-            if(strlen(searchArray[i].gameName) > dynamicLength)
-            {
-                dynamicLength = strlen(searchArray[i].gameName);
-            }
-        }
-        for(int i = 0; i < newArrayIndex; i++)
-        {
-            printf("%-*s %d\n", dynamicLength, searchArray[i].gameName, searchArray[i].grade);
-        }
-        newArrayIndex = 0;
     }
 }
 
-void deleteGame(User listOfUsers[], int userIndex, int gameIndex) //rewrite of the removeUser code retrofitted for a game
+void deleteGame(User listOfUsers[], int userIndex, int gameIndex) //rewrite of the removeUser function retrofitted for a game
 {
     int j = gameIndex;
     for(j; j < listOfUsers[userIndex].nrOfGames; j++)
@@ -315,64 +412,48 @@ void deleteGame(User listOfUsers[], int userIndex, int gameIndex) //rewrite of t
 
 void removeGame(User listOfUsers[], int userIndex)
 {
+    SearchGameIndex removedGameInfo;
     char searchWord[NAMELENGTH];
     char choice;
-    Game searchArray[MAXUSERGAMES];
     int removeGameIndex;
-    int newArrayIndex = 0;
-    while(1)
+    if(listOfUsers[userIndex].nrOfGames == 0)
     {
-        printf("Search boardgame to remove (q to quit): ");
-        fgets(searchWord, sizeof(searchWord), stdin);
-        searchWord[strlen(searchWord) - 1] = '\0'; //standard input where we clear newline character
-        if(strcmp(searchWord, "q") == 0)
+        printf("No games registrered\n");
+    }
+    else
+    {
+        while(1)
         {
-            break; //we quit on q
-        }
-        for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++) // we start searching for matching strings
-        {
-            if(strstr(listOfUsers[userIndex].gamesList[i].gameName, searchWord) != NULL) //check that there actually is a game matched
+            printf("Search boardgame to remove (q to quit): ");
+            fgets(searchWord, sizeof(searchWord), stdin);
+            searchWord[strlen(searchWord) - 1] = '\0'; //standard input where we clear newline character
+            if(strcmp(searchWord, "q") == 0)
             {
-                strcpy(searchArray[newArrayIndex].gameName, listOfUsers[userIndex].gamesList[i].gameName); //my new array that I keep seperately from the players
-                searchArray[newArrayIndex].grade = listOfUsers[userIndex].gamesList[i].grade;              //so that I can later decide the length of the longest gamename shown in the search (not necessarily in the players own gameslist because they are separate)
-                removeGameIndex = i; //this tells you what position in the player's gamelist the gamelist was so that we can later remove
-                newArrayIndex++; //used in the for loop that displays the amount of matches you got on your search
+                break; //we quit on q
             }
-        }
-        int dynamicLength = 0; //decide the lenght of the string display in the cmd
-        for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++)
-        {
-            if(strlen(searchArray[i].gameName) > dynamicLength)
+            removedGameInfo = searchDisplayGames(listOfUsers, searchWord, userIndex);
+            if(removedGameInfo.nrOfMatches != 1)
             {
-                dynamicLength = strlen(searchArray[i].gameName); //process of elimination
+                printf("You did not find one unique boardgame.\n");
             }
-        }
-        for(int i = 0; i < newArrayIndex; i++)
-        {
-            printf("%-*s %d\n", dynamicLength, searchArray[i].gameName, searchArray[i].grade); //displays the matches
-        }
-        if(newArrayIndex != 1)
-        {
-            printf("You did not find one unique boardgame.\n");
-        }
-        else if(newArrayIndex == 1)
-        {
-            while(1)
+            else if(removedGameInfo.nrOfMatches == 1)
             {
-                printf("Do you want to remove this game (y/n): "); //checks whether you really want to delete the game
-                scanf("%c%*c", &choice);
-                if(choice == 'n')
+                while(1)
                 {
-                    break;
-                }
-                else if(choice == 'y')
-                {
-                    deleteGame(listOfUsers, userIndex, removeGameIndex); //the removeGameIndex is the original element position of the game in the players
-                    break;                                               //gamelist so that we can remove it AFTER formatting the output
+                    printf("Do you want to remove this game (y/n): "); //checks whether you really want to delete the game
+                    scanf("%c%*c", &choice);
+                    if(choice == 'n')
+                    {
+                        break;
+                    }
+                    else if(choice == 'y')
+                    {
+                        deleteGame(listOfUsers, userIndex, removedGameInfo.originalIndex); //the removeGameIndex is the original element position of the game in the players
+                        break;                                                             //gamelist so that we can remove it AFTER formatting the output
+                    }
                 }
             }
         }
-        newArrayIndex = 0;
     }
 }
 
