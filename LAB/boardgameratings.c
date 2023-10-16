@@ -32,43 +32,53 @@ typedef struct searchGameIndex SearchGameIndex;
 
 /*    ---    funktioner   ---   */
 
-void readFromFile(char fileName[])
+void readFromFile(FILE *fp, char fileName[], User listOfUsers[], int *pNrOfUsers)
 {
-    FILE *fp; 
     fp = fopen(fileName, "r");
     if(fp == NULL)
     {
         //start from zero and WRITE to file at the end. Create a new filed called what the user typed in.
-        fclose(fp);
     }
     else
     {
-        //start to read from the file that exists.
+        fscanf(fp, "%d\n", pNrOfUsers);
+        for(int i = 0; i < (*pNrOfUsers); i++)
+        {
+            fscanf(fp, "%s %d", listOfUsers[i].userName, &listOfUsers[i].nrOfGames);
+            for(int j = 0; j < listOfUsers[i].nrOfGames; j++)
+            {
+                fscanf(fp, "%s %d", listOfUsers[i].gamesList[j].gameName, &listOfUsers[i].gamesList[j].grade);
+            }
+        }
+        fclose(fp);
     }
 }
 
-int findUser(User listOfUsers[], int *pNrOfUsers, char userName[]) //return if the user is found
+void writeToFile(FILE *fp, char fileName[], User listOfUsers[], int *pNrOfUsers)
+{
+    fp = fopen(fileName, "w");
+    fprintf(fp, "%d\n", (*pNrOfUsers));
+    for(int i = 0; i < (*pNrOfUsers); i++)
+    {
+        fprintf(fp, "%s %d\n", listOfUsers[i].userName, listOfUsers[i].nrOfGames);
+        for(int j = 0; j < (listOfUsers[i].nrOfGames); j++)
+        {
+            fprintf(fp, "%s %d\n", listOfUsers[i].gamesList[j].gameName, listOfUsers[i].gamesList[j].grade);
+        }
+    }
+    fclose(fp);
+}
+
+int findUser(User listOfUsers[], int *pNrOfUsers, char userName[]) 
 {
     for(int i = 0; i < (*pNrOfUsers); i++)
     {
         if(strcmp(listOfUsers[i].userName, userName) == 0)
         {
-            return 1; //returns 1 when found
+            return i; //return the INDEX of the user it found
         }
     }
-    return 0; //returns 0 when no user could be found
-}
-
-int returnUserIndex(User listOfUsers[], int *pNrOfUsers, char userName[]) //return the INDEX of the user it found
-{
-    for(int i = 0; i < (*pNrOfUsers); i++)
-    {
-        if(strcmp(listOfUsers[i].userName, userName) == 0)
-        {
-            return i;
-        }
-    }
-    return (-1);
+    return (-1); //returns -1 when no user could be found
 }
 
 User createUser(char userName[]) //creates one instance of the struct of type user
@@ -93,12 +103,12 @@ void registerUser(User listOfUsers[], int *pNrOfUsers) //checks whether user can
             break;
         }
         userNameExists = findUser(listOfUsers, pNrOfUsers, registerName);
-        if(userNameExists == 1) // user name already exists, try another one!
+        if(userNameExists != (-1)) // user name already exists, try another one!
         {
             printf("User name exists! Please choose another.\n");
             continue;
         }
-        else if(userNameExists == 0) // did not find user, lets create one!
+        else if(userNameExists == (-1)) // did not find user, lets create one!
         {
             if((*pNrOfUsers >= MAXUSERS))
             {
@@ -125,12 +135,13 @@ void registerUser(User listOfUsers[], int *pNrOfUsers) //checks whether user can
 
 void removeUser(User listOfUsers[], int *pNrOfUsers) // removes one user from the list
 {
+    char registerName[NAMELENGTH];
     int userIndex;
     char choice;
     int continueLoop = 0;
     while(1)
     {
-        char registerName[NAMELENGTH];
+        
         printf("Remove user (q to quit): ");
         fgets(registerName, sizeof(registerName), stdin);
         registerName[strlen(registerName) - 1] = '\0';
@@ -138,7 +149,7 @@ void removeUser(User listOfUsers[], int *pNrOfUsers) // removes one user from th
         {
             break;
         }
-        userIndex = returnUserIndex(listOfUsers, pNrOfUsers, registerName);
+        userIndex = findUser(listOfUsers, pNrOfUsers, registerName);
         if(userIndex == (-1)) // user name does not exist, try another one!
         {
             printf("User do not exist! Please choose another.\n");
@@ -167,28 +178,47 @@ void removeUser(User listOfUsers[], int *pNrOfUsers) // removes one user from th
             }
             if(continueLoop == 0)
             {
-                int j = userIndex; //TODO: Add confirmation option when user has registered games and scores!!!
-                for(j; j < MAXUSERS; j++)
+                int i = userIndex;
+                for(i; i < ((*pNrOfUsers) - 1); i++)
                 {
-                    User temp;
-                    temp = listOfUsers[j];
-                    listOfUsers[j] = listOfUsers[j + 1];
-                    listOfUsers[j + 1] = temp;
+                    listOfUsers[i] = listOfUsers[i + 1];
                 }
                 (*pNrOfUsers)--;
+                printf("Removed\n");
             }
         }
     }
 }
 
+int getStringLength(User listOfUsers[], int userIndex)
+{
+    int dynamicLength = 0;
+    for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++)
+    {
+        if(strlen(listOfUsers[userIndex].gamesList[i].gameName) > dynamicLength)
+        {
+            dynamicLength = strlen(listOfUsers[userIndex].gamesList[i].gameName);
+        }
+    }
+    return dynamicLength;
+}
+
 void printUserRatings(User listOfUsers[], int *pNrOfUsers)
 {
+    int dynamicLength;
     if((*pNrOfUsers) == 0)
     {
         printf("No users registrered\n");
     }
     else
     {
+        for(int i = 0; i < ((*pNrOfUsers) - 1); i++)
+        {
+            if(getStringLength(listOfUsers, i) < getStringLength(listOfUsers, (i + 1)))
+            {
+                dynamicLength = getStringLength(listOfUsers, (i + 1));
+            }
+        }
         printf("Users and boardgames:\n_____________________________________\n");
         for(int i = 0; i < (*pNrOfUsers); i++) //here we just print out the ratings and game names, and nothing if the user has nothing registered
         {
@@ -200,9 +230,10 @@ void printUserRatings(User listOfUsers[], int *pNrOfUsers)
             }
             for(int j = 0; j < listOfUsers[i].nrOfGames; j++)
             {
-                printf("        %-20s%d\n", listOfUsers[i].gamesList[j].gameName, listOfUsers[i].gamesList[j].grade);
+                printf("        %-*s %d\n", dynamicLength, listOfUsers[i].gamesList[j].gameName, listOfUsers[i].gamesList[j].grade);
             }
         }
+        printf("\n");
     }
 }
 
@@ -225,7 +256,8 @@ void printUsers(User listOfUsers[], int *pNrOfUsers)
 
 void adminMenu(User listOfUsers[], int *pNrOfUsers) //administrative menu
 {
-    int adminChoice;
+    char adminChoice[NAMELENGTH];
+    int atoiInteger;
     int exit = 0;
     while(!exit)
     {
@@ -236,8 +268,15 @@ void adminMenu(User listOfUsers[], int *pNrOfUsers) //administrative menu
         printf("          4) Print all users and all their ratings\n");
         printf("          5) Exit\n");
         printf("Choose: ");
-        scanf("%d%*c", &adminChoice);
-        switch(adminChoice)
+        fgets(adminChoice, sizeof(adminChoice), stdin);
+        adminChoice[strlen(adminChoice) - 1] = '\0';
+        atoiInteger = atoi(adminChoice);
+        if(atoiInteger == 0)
+        {
+            printf("Please enter a valid choice.\n");
+            continue;
+        }
+        switch(atoiInteger)
         {
             case 1: //add user
                 registerUser(listOfUsers, pNrOfUsers);
@@ -319,20 +358,14 @@ void registerGame(User listOfUsers[], int userIndex)
 
 void printGames(User listOfUsers[], int userIndex)
 {
+    int dynamicLength;
     if(listOfUsers[userIndex].nrOfGames == 0)
     {
         printf("No games registered\n");
     }
     else
     {
-        int dynamicLength = 0;
-        for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++)
-        {
-            if(strlen(listOfUsers[userIndex].gamesList[i].gameName) > dynamicLength)
-            {
-                dynamicLength = strlen(listOfUsers[userIndex].gamesList[i].gameName);
-            }
-        }
+        dynamicLength = getStringLength(listOfUsers, userIndex);
         for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++)
         {
             printf("        %-*s %d\n", dynamicLength, listOfUsers[userIndex].gamesList[i].gameName, listOfUsers[userIndex].gamesList[i].grade);
@@ -345,6 +378,7 @@ SearchGameIndex searchDisplayGames(User listOfUsers[], char searchWord[], int us
     Game searchArray[MAXUSERGAMES];
     SearchGameIndex searchGameInfo;
     int newArrayIndex = 0;
+    int dynamicLength;
     int originalIndex;
     for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++) // we start searching for matching strings
     {
@@ -356,14 +390,7 @@ SearchGameIndex searchDisplayGames(User listOfUsers[], char searchWord[], int us
             newArrayIndex++;
         }
     }
-    int dynamicLength = 0;
-    for(int i = 0; i < listOfUsers[userIndex].nrOfGames; i++) //decides the assigned length for the string so we can format the print properly
-    {
-        if(strlen(searchArray[i].gameName) > dynamicLength)
-        {
-            dynamicLength = strlen(searchArray[i].gameName);
-        }
-    }
+    dynamicLength = getStringLength(listOfUsers, userIndex); //we decide the proper formatting length for the string of the game names
     for(int i = 0; i < newArrayIndex; i++) //we print out the scores accordingly with proper formattings
     {
         printf("%-*s %d\n", dynamicLength, searchArray[i].gameName, searchArray[i].grade);
@@ -399,13 +426,10 @@ void searchGame(User listOfUsers[], int userIndex)
 
 void deleteGame(User listOfUsers[], int userIndex, int gameIndex) //rewrite of the removeUser function retrofitted for a game
 {
-    int j = gameIndex;
-    for(j; j < listOfUsers[userIndex].nrOfGames; j++)
+    int i = gameIndex;
+    for(i; i < (listOfUsers[userIndex].nrOfGames - 1); i++)
     {
-        Game temp;
-        temp = listOfUsers[userIndex].gamesList[j];
-        listOfUsers[userIndex].gamesList[j] = listOfUsers[userIndex].gamesList[j + 1];
-        listOfUsers[userIndex].gamesList[j + 1] = temp;
+        listOfUsers[userIndex].gamesList[i] = listOfUsers[userIndex].gamesList[i + 1];
     }
     (listOfUsers[userIndex].nrOfGames)--;
 }
@@ -459,7 +483,8 @@ void removeGame(User listOfUsers[], int userIndex)
 
 void userMenu(User listOfUsers[], char userName[], int userIndex)
 {
-    int userChoice;
+    char userChoice[NAMELENGTH];
+    int atoiInteger;
     int exit = 0;
     while(!exit)
     {
@@ -470,8 +495,15 @@ void userMenu(User listOfUsers[], char userName[], int userIndex)
         printf("          4) Remove game\n");
         printf("          5) Exit\n");
         printf("Choose: ");
-        scanf("%d%*c", &userChoice);
-        switch(userChoice)
+        fgets(userChoice, sizeof(userChoice), stdin);
+        userChoice[strlen(userChoice) - 1] = '\0';
+        atoiInteger = atoi(userChoice);
+        if(atoiInteger == 0)
+        {
+            printf("Please enter a valid choice.\n");
+            continue;
+        }
+        switch(atoiInteger)
         {
             case 1: //print games
                 printGames(listOfUsers, userIndex);
@@ -506,46 +538,35 @@ int main()
     int nrOfUsers = 0;
     int indexUser;
 
+    FILE *fp;
+
     fgets(fileName, sizeof(fileName), stdin);
     fileName[strlen(fileName) - 1] = '\0';
     
-    //readFromFile(fileName);
+    readFromFile(fp, fileName, listOfUsers, &nrOfUsers);
 
     while(1)
     {
         printf("Please enter user name, admin or quit: ");
         fgets(userName, sizeof(userName), stdin);
         userName[strlen(userName) - 1] = '\0';
-        if(strcmp(userName, "a") == 0) //temporarily changed "admin" to "a" for debug workflow purposes.
+        if(strcmp(userName, "admin") == 0) //temporarily changed "admin" to "a" for debug workflow purposes.
         {
             adminMenu(listOfUsers, &nrOfUsers); //enter admin menu
         } 
         else if(strcmp(userName, "quit") == 0)
         {
+            writeToFile(fp, fileName, listOfUsers, &nrOfUsers); //spara all data i en fil vid avslutning
             return 0; //we are quitting the program
         } 
-        else if(findUser(listOfUsers, &nrOfUsers, userName) == 0) //no matching user found
+        else if(findUser(listOfUsers, &nrOfUsers, userName) == (-1)) //no matching user found
         {
             printf("User does not exist\n");
         } 
         else //we are assuming the admin typed in a username and thus we'll enter that profile
         {
-            userMenu(listOfUsers, userName, returnUserIndex(listOfUsers, &nrOfUsers, userName));
+            userMenu(listOfUsers, userName, findUser(listOfUsers, &nrOfUsers, userName));
         }
     }
-    
-    //ange fil
-        //finns inte fil starta blankt
-            //bara kunna logga in som admin
-
-    //Logga in som admin
-        //add / remove user
-    
-    //logga in som user
-        //add / remove games and grade
-
-
-
-    //spara all data i en fil vid avslutning
     return 0;
 }
