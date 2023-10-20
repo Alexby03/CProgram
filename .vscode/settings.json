@@ -2,7 +2,8 @@
     "files.associations": {
         "stdio.h": "c",
         "time.h": "c",
-        "limits.h": "c"
+        "limits.h": "c",
+        "stdlib.h": "c"
     },
     "cmake.configureOnOpen": false,
     "C_Cpp.errorSquiggles": "disabled"
